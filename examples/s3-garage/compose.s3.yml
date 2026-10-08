@@ -1,0 +1,51 @@
+# S3 storage with Garage, on top of docker-compose.yml:
+#   docker compose -f docker-compose.yml -f compose.s3.yml up -d
+# This file, garage.toml and garage-init.sh go next to docker-compose.yml;
+# the secrets in ./secrets/ (README.md). Garage needs its own HTTPS address
+# (e.g. https://s3.example.com), served by your proxy from 127.0.0.1:3900.
+services:
+  garage:
+    image: dxflrs/garage:v2.4.1
+    restart: unless-stopped
+    volumes:
+      - ./garage.toml:/etc/garage.toml:ro
+      - garage-meta:/var/lib/garage/meta
+      - garage-data:/var/lib/garage/data
+    secrets: [garage_rpc_secret, garage_admin_token]
+    ports:
+      - 127.0.0.1:3900:3900
+
+  # Layout, bucket, key and CORS rule, at every start (idempotent). Root: it
+  # reads the admin token, mode 600.
+  garage-init:
+    image: curlimages/curl:8.22.0
+    user: root
+    depends_on: [garage]
+    environment:
+      PUBLIC_URL: "${PUBLIC_URL:?the HTTPS address users open, set it in .env}"
+    secrets: [garage_admin_token, s3_access_key, s3_secret_key]
+    volumes:
+      - ./garage-init.sh:/garage-init.sh:ro
+    entrypoint: ["sh", "/garage-init.sh"]
+
+  theca:
+    depends_on:
+      garage-init:
+        condition: service_completed_successfully
+    # The storage's key files in the setup: /run/secrets/s3_access_key and
+    # /run/secrets/s3_secret_key.
+    secrets: [s3_access_key, s3_secret_key]
+
+secrets:
+  garage_rpc_secret:
+    file: ./secrets/garage_rpc_secret
+  garage_admin_token:
+    file: ./secrets/garage_admin_token
+  s3_access_key:
+    file: ./secrets/s3_access_key
+  s3_secret_key:
+    file: ./secrets/s3_secret_key
+
+volumes:
+  garage-meta:
+  garage-data:

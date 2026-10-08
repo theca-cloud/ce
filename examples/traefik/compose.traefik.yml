@@ -1,0 +1,55 @@
+# Traefik in front of Theca, with HTTPS, on top of docker-compose.yml:
+#   docker compose -f docker-compose.yml -f compose.traefik.yml up -d
+# This file goes next to docker-compose.yml; DOMAIN and ACME_EMAIL in .env
+# (README.md). Only Traefik is published (80 and 443).
+services:
+  traefik:
+    image: traefik:v3.6
+    restart: unless-stopped
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.websecure.address=:443
+      # Traefik ends a request after 60 s by default: a large WebDAV upload
+      # would be cut. No limit.
+      - --entrypoints.websecure.transport.respondingtimeouts.readtimeout=0
+      - --certificatesresolvers.letsencrypt.acme.tlschallenge=true
+      - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:?your email for Let's Encrypt, set it in .env}
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - letsencrypt:/letsencrypt
+    networks:
+      default:
+        # A fixed address: the server trusts its X-Forwarded-For.
+        ipv4_address: 172.30.0.10
+        # The server reaches these addresses too (Garage's for S3, Authelia's
+        # for OIDC): through Traefik inside the network, not out and back in.
+        # Add S3_DOMAIN and AUTH_DOMAIN here when using them.
+        aliases:
+          - ${DOMAIN}
+
+  theca:
+    ports: !reset []
+    environment:
+      TRUSTED_PROXIES: 172.30.0.10
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.theca.rule=Host(`${DOMAIN:?the address Theca is served at (cloud.example.com), set it in .env}`)
+      - traefik.http.routers.theca.entrypoints=websecure
+      - traefik.http.routers.theca.tls.certresolver=letsencrypt
+      - traefik.http.services.theca.loadbalancer.server.port=8080
+
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+
+volumes:
+  letsencrypt:

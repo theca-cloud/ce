@@ -1,0 +1,16 @@
+# Theca behind Caddy (compose.caddy.yml): HTTPS from Let's Encrypt for each
+# address, renewed by Caddy. No body size limit by default: large uploads pass.
+
+{$DOMAIN} {
+	reverse_proxy theca:8080
+}
+
+# With examples/s3-garage/: Garage's own address (S3_DOMAIN in .env).
+# {$S3_DOMAIN} {
+# 	reverse_proxy garage:3900
+# }
+
+# With examples/authelia/: Authelia's address (AUTH_DOMAIN in .env).
+# {$AUTH_DOMAIN} {
+# 	reverse_proxy authelia:9091
+# }

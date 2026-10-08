@@ -1,5 +1,6 @@
-# The smoke test's changes to docker-compose.yml (scripts/smoke.sh runs both):
-# only what a test must change; the rest is the shipped file's.
+# The smoke test's changes to docker-compose.yml (scripts/smoke.sh runs it in
+# a self-hoster's folder): only what a test must change; the rest, secrets
+# included, is the shipped file's.
 services:
   postgres:
     healthcheck:
@@ -19,13 +20,3 @@ services:
       interval: 2s
       retries: 30
 
-# In the workspace: a remote daemon (CI) finds them at the same path.
-secrets:
-  postgres_password:
-    file: ${SMOKE_DIR}/postgres_password
-  database_url:
-    file: ${SMOKE_DIR}/database_url
-  server.key:
-    file: ${SMOKE_DIR}/server.key
-  data.key:
-    file: ${SMOKE_DIR}/data.key

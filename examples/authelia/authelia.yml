@@ -1,0 +1,53 @@
+# Authelia as Theca's OIDC provider (compose.authelia.yml). Values from .env
+# through Authelia's template filter; secrets are files in ./secrets/.
+server:
+  address: tcp://:9091
+
+log:
+  level: info
+
+authentication_backend:
+  # Users are managed in users.yml.
+  password_reset:
+    disable: true
+  file:
+    path: /config/users.yml
+
+access_control:
+  default_policy: deny
+  rules:
+    - domain: '{{ env "AUTH_DOMAIN" }}'
+      policy: one_factor
+
+session:
+  cookies:
+    - domain: '{{ env "AUTH_DOMAIN" }}'
+      authelia_url: 'https://{{ env "AUTH_DOMAIN" }}'
+
+storage:
+  local:
+    path: /var/lib/authelia/db.sqlite3
+
+notifier:
+  filesystem:
+    filename: /var/lib/authelia/notifications.txt
+
+identity_providers:
+  oidc:
+    jwks:
+      - key: {{ secret "/run/secrets/authelia_jwks_key" | mindent 10 "|" | msquote }}
+    clients:
+      - client_id: theca
+        client_name: Theca
+        # The hash of the secret Theca reads (its provider's client secret file).
+        client_secret: '{{ secret "/run/secrets/oidc_client_secret_hash" }}'
+        authorization_policy: one_factor
+        require_pkce: true
+        pkce_challenge_method: S256
+        # The callback URL Theca's admin page shows for the provider.
+        redirect_uris:
+          - '{{ env "OIDC_CALLBACK" }}'
+        scopes: [openid, email, profile]
+        grant_types: [authorization_code]
+        response_types: [code]
+        token_endpoint_auth_method: client_secret_basic
