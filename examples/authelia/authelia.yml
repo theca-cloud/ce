@@ -34,14 +34,22 @@ notifier:
 
 identity_providers:
   oidc:
+    # Theca reads the email from the ID token (Authelia only puts it in
+    # UserInfo by default).
+    claims_policies:
+      theca:
+        id_token: [email, email_verified]
     jwks:
       - key: {{ secret "/run/secrets/authelia_jwks_key" | mindent 10 "|" | msquote }}
     clients:
       - client_id: theca
         client_name: Theca
+        claims_policy: theca
         # The hash of the secret Theca reads (its provider's client secret file).
         client_secret: '{{ secret "/run/secrets/oidc_client_secret_hash" }}'
         authorization_policy: one_factor
+        # One app, the instance's own: no consent screen.
+        consent_mode: implicit
         require_pkce: true
         pkce_challenge_method: S256
         # The callback URL Theca's admin page shows for the provider.

@@ -1,0 +1,13 @@
+# The smoke test's changes to examples/caddy/ (scripts/smoke.sh --caddy): HTTPS
+# where the test reaches it, the test CA's certificate (smoke.sh adds it to
+# each site of the Caddyfile, instead of Let's Encrypt), every domain in the
+# network.
+services:
+  caddy:
+    ports: !override
+      - ${SMOKE_BIND}:${SMOKE_HTTPS_PORT}:443
+    volumes:
+      - ${SMOKE_TLS}:/smoke-tls:ro
+    networks:
+      default:
+        aliases: [cloud.example.com, s3.example.com, auth.example.com]

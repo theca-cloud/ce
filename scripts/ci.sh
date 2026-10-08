@@ -1,9 +1,20 @@
 #!/usr/bin/env sh
-# Every CI check (the pipeline and the pre-push hook): the shipped compose is
-# valid, alone and with each example; then the smoke test runs it, with the
-# filesystem storage and with S3 (scripts/smoke.sh).
+# Every CI check: the shipped compose is valid, alone and with each example;
+# then the smoke test runs it (scripts/smoke.sh): plain, then with every
+# example (S3 behind Caddy with an Authelia login, S3 behind Traefik).
+#   scripts/ci.sh          everything (the pipeline)
+#   scripts/ci.sh quick    the compose files and the plain smoke test (the
+#                          pre-push hook: the examples' runs take minutes)
 set -eu
 cd "$(dirname "$0")/.."
+
+case "${1:-all}" in
+all | quick) ;;
+*)
+    echo "usage: scripts/ci.sh [quick]" >&2
+    exit 2
+    ;;
+esac
 
 # The variables the files require, with example values.
 export PUBLIC_URL=https://cloud.example.com DOMAIN=cloud.example.com ACME_EMAIL=admin@example.com \
@@ -17,4 +28,6 @@ config -f examples/caddy/compose.caddy.yml -f examples/authelia/compose.authelia
 echo "Compose files valid"
 
 scripts/smoke.sh
-scripts/smoke.sh --s3
+[ "${1:-all}" = quick ] && exit 0
+scripts/smoke.sh --s3 --caddy --authelia
+scripts/smoke.sh --s3 --traefik

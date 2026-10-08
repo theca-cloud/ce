@@ -1,0 +1,9 @@
+# The smoke test behind a proxy example (scripts/smoke.sh --caddy or
+# --traefik): the server trusts the test's CA, as it would a self-hoster's
+# private one, to reach Garage and Authelia through the proxy over HTTPS.
+services:
+  theca:
+    environment:
+      SSL_CERT_FILE: /smoke-tls/ca.pem
+    volumes:
+      - ${SMOKE_TLS}:/smoke-tls:ro
