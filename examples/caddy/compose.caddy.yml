@@ -1,0 +1,44 @@
+# Caddy in front of Theca, with HTTPS, on top of docker-compose.yml:
+#   docker compose -f docker-compose.yml -f compose.caddy.yml up -d
+# This file and the Caddyfile go next to docker-compose.yml; DOMAIN in .env
+# (README.md). Only Caddy is published (80 and 443).
+services:
+  caddy:
+    image: caddy:2.10
+    restart: unless-stopped
+    environment:
+      DOMAIN: "${DOMAIN:?the address Theca is served at (cloud.example.com), set it in .env}"
+      S3_DOMAIN: "${S3_DOMAIN:-}"
+      AUTH_DOMAIN: "${AUTH_DOMAIN:-}"
+    ports:
+      - 80:80
+      - 443:443
+      - 443:443/udp
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks:
+      default:
+        # A fixed address: the server trusts its X-Forwarded-For.
+        ipv4_address: 172.30.0.10
+        # The server reaches these addresses too (Garage's for S3, Authelia's
+        # for OIDC): through Caddy inside the network, not out and back in.
+        # Add S3_DOMAIN and AUTH_DOMAIN here when using them.
+        aliases:
+          - ${DOMAIN}
+
+  theca:
+    ports: !reset []
+    environment:
+      TRUSTED_PROXIES: 172.30.0.10
+
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+
+volumes:
+  caddy-data:
+  caddy-config:

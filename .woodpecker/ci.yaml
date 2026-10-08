@@ -1,0 +1,50 @@
+# Every branch (dev and prod included) and pull request, when something built
+# or tested changed; manual runs always. The smoke test (scripts/ci.sh) on a
+# real Docker daemon: it builds the very Dockerfile that is published.
+when:
+  - event: [push, pull_request]
+    # Nothing built or tested changed: docs, the roadmap, local-only scripts,
+    # repo housekeeping.
+    path:
+      exclude: ["**/*.md", "roadmap/**", "scripts/install-hooks.sh", "scripts/release.sh", "LICENSE", ".githooks/**", "cliff.toml", ".gitignore"]
+    # Not the release merge coming back into dev: prod just tested that very code.
+    evaluate: 'not (CI_COMMIT_BRANCH == "dev" && CI_COMMIT_MESSAGE startsWith "Merge branch ''dev'' into prod")'
+  - event: manual
+
+# A fixed workspace path: the daemon bind-mounts the smoke test's secret files
+# from it, at the path the smoke step wrote them.
+workspace:
+  base: /woodpecker
+  path: src
+
+steps:
+  # The Docker daemon, in the background for the rest of the pipeline. A
+  # detached step, not a service: steps share the workspace, services don't.
+  # Privileged: the repository is trusted in Woodpecker.
+  - name: docker
+    image: docker:29-dind
+    privileged: true
+    detach: true
+    depends_on: []
+    environment:
+      # Plain TCP inside the pipeline's network.
+      DOCKER_TLS_CERTDIR: ""
+
+  - name: smoke
+    image: docker:29-cli
+    pull: true
+    depends_on: [docker]
+    environment:
+      DOCKER_HOST: tcp://docker:2375
+      # Where the instance's published port is reached: the daemon's host.
+      SMOKE_HOST: docker
+      GITEA_USER:
+        from_secret: gitea_user
+      GITEA_TOKEN:
+        from_secret: gitea_token
+    commands:
+      - apk add -q curl jq openssl
+      - until docker info >/dev/null 2>&1; do sleep 1; done
+      # core and web are on the private registry.
+      - printf %s "$GITEA_TOKEN" | docker login git.pband.ch -u "$GITEA_USER" --password-stdin
+      - scripts/ci.sh

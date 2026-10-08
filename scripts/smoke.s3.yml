@@ -1,0 +1,6 @@
+# The smoke test's changes to examples/s3-garage/ (scripts/smoke.sh --s3): its
+# S3 API where the test reaches it, for the CORS checks.
+services:
+  garage:
+    ports: !override
+      - ${SMOKE_BIND}:${SMOKE_S3_PORT}:3900

@@ -1,0 +1,7 @@
+# Authelia's users (README.md). Each password is a hash:
+#   docker run --rm authelia/authelia:4.39 authelia crypto hash generate argon2 --password 'the password'
+users:
+  alice:
+    displayname: Alice
+    email: alice@example.com
+    password: REPLACE WITH THE HASH

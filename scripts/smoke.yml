@@ -1,0 +1,22 @@
+# The smoke test's changes to docker-compose.yml (scripts/smoke.sh runs it in
+# a self-hoster's folder): only what a test must change; the rest, secrets
+# included, is the shipped file's.
+services:
+  postgres:
+    healthcheck:
+      interval: 2s
+      retries: 30
+
+  theca:
+    # The image just built.
+    image: theca-ce:smoke
+    environment:
+      # smoke.sh sets the instance up through the API.
+      SETUP_OPEN: "true"
+    ports: !override
+      - ${SMOKE_BIND}:${SMOKE_PORT}:8080
+    # The image's check, more often: --wait returns sooner.
+    healthcheck:
+      interval: 2s
+      retries: 30
+
