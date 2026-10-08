@@ -16,7 +16,7 @@ Nothing is built yet: the first session drafts `roadmap/00. global.md` with the 
 ## What it ships (V1, `../docs/ROADMAP.md` item 4)
 
 - **The CE image**: `core`'s binary and `web`'s build, `WEB_DIR` set. Its CI tests the pair before publishing (decisions.md).
-- **A compose** with Postgres (17+, the built-in `C.UTF-8` collation: `../core/CONFIGURATION.md`) and Garage (S3).
+- **A compose** with Postgres (18+ with the built-in `C.UTF-8` collation, or the server refuses to start: `../core/CONFIGURATION.md`) and Garage (S3).
 - **The S3 buckets' CORS rule**: browsers upload and download chunks through presigned URLs on the bucket's origin, so the bucket must allow `PUT` and `GET` from `PUBLIC_URL`, the signed headers (`x-amz-checksum-sha256`, `If-None-Match`), and expose `ETag` (decisions.md, Web app: no CORS on the server). Set up by the compose. **Gap**: decisions.md says it's documented in `../core/CONFIGURATION.md`, which doesn't have it yet: a `core` docs change (its own branch and commit).
 - **The `rclone bisync` documentation**: V1's two-way sync goes through WebDAV (`../docs/features.md`); the sync client is V2.
 
