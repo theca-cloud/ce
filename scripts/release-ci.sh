@@ -5,8 +5,8 @@
 #            version already released); X.Y.Z-rc, X.Y-rc, X-rc, rc on dev; and
 #            the core the pinned web is for, as CORE_VERSION's default in the
 #            Dockerfile (the buildx plugin's build args are static)
-#   publish  the tag and the Gitea release: the web and core it holds, and
-#            this version's changelog (prod)
+#   publish  the tag and the Gitea release: the web and core it holds, this
+#            version's changelog, and docker-compose.yml attached (prod)
 #            DRY_RUN=1: prints the release, publishes nothing
 set -eu
 cd "$(dirname "$0")/.."
@@ -49,9 +49,12 @@ publish)
     fi
     # printf, not echo: sh's echo turns the notes' \n into line breaks (invalid
     # JSON); --data-binary, not -d, which strips them.
-    printf '%s\n' "$release" |
+    id=$(printf '%s\n' "$release" |
         curl -fsS -X POST -H "Authorization: token $GITEA_TOKEN" -H 'Content-Type: application/json' \
-            --data-binary @- "$gitea/api/v1/repos/$repo/releases" >/dev/null
+            --data-binary @- "$gitea/api/v1/repos/$repo/releases" | jq -r .id)
+    # The compose self-hosters download: it names this release's image.
+    curl -fsS -X POST -H "Authorization: token $GITEA_TOKEN" -F "attachment=@docker-compose.yml" \
+        "$gitea/api/v1/repos/$repo/releases/$id/assets?name=docker-compose.yml" >/dev/null
     echo "Released v$version"
     ;;
 *)

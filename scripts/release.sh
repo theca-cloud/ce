@@ -1,7 +1,8 @@
 #!/usr/bin/env sh
 # Prepares a release on `dev`, or `prod` for a hotfix (docs/CONTRIBUTING.md,
 # Releases): the next version from the Conventional Commits since the last
-# release (git-cliff), written to VERSION, CHANGELOG.md, committed as
+# release (git-cliff), written to VERSION, the compose's image tag and
+# CHANGELOG.md, committed as
 # `chore(release): X.Y.Z`. Then merge `dev` into `prod` (git merge --no-ff dev):
 # its pipeline publishes the image and the release.
 #   scripts/release.sh            prepare and commit
@@ -36,8 +37,11 @@ if [ "${1:-}" = --dry-run ]; then
 fi
 
 echo "$next" >VERSION
+# The compose names its own release (the exact version until 1.0).
+sed -i.bak "s|image: git.pband.ch/theca/ce:.*|image: git.pband.ch/theca/ce:$next|" docker-compose.yml
+rm docker-compose.yml.bak
 git cliff --tag "v$next" -o CHANGELOG.md
-git add VERSION CHANGELOG.md
+git add VERSION docker-compose.yml CHANGELOG.md
 git commit -q -m "chore(release): $next"
 echo "Release $next prepared on dev. Next: push dev, wait for its CI, then"
 echo "  git checkout prod && git merge --no-ff dev && git push"

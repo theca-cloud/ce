@@ -8,7 +8,7 @@ when:
     branch: [dev, prod]
     # The image didn't change: what ci.yaml skips, plus what only the checks read.
     path:
-      exclude: ["**/*.md", "roadmap/**", "scripts/install-hooks.sh", "scripts/release.sh", "LICENSE", ".githooks/**", "cliff.toml", ".gitignore", "scripts/ci.sh", "scripts/smoke.sh", "scripts/smoke.yml", ".woodpecker/ci.yaml"]
+      exclude: ["**/*.md", "roadmap/**", "scripts/install-hooks.sh", "scripts/release.sh", "LICENSE", ".githooks/**", "cliff.toml", ".gitignore", "docker-compose.yml", "scripts/ci.sh", "scripts/smoke.sh", "scripts/smoke.yml", ".woodpecker/ci.yaml"]
     # Not the release merge coming back into dev: prod just tested that very code.
     evaluate: 'not (CI_COMMIT_BRANCH == "dev" && CI_COMMIT_MESSAGE startsWith "Merge branch ''dev'' into prod")'
   - event: manual

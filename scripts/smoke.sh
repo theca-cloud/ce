@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 # The smoke test: proves the CE image is core and web assembled right (their
 # own suites test each side). Builds the image for this platform, runs it with
-# Postgres (scripts/smoke.yml), then checks with curl: the web app on / and on
+# Postgres (docker-compose.yml, as shipped, changed by scripts/smoke.yml), then checks with curl: the web app on / and on
 # deep links, the expected core, the setup, a file through WebDAV into the
 # filesystem storage. Leaves nothing behind.
 #   scripts/smoke.sh          run it
@@ -22,8 +22,9 @@ export SMOKE_PORT=${SMOKE_PORT:-8099}
 # secret files at the same path.
 export SMOKE_DIR="$PWD/.smoke"
 url=http://localhost:$SMOKE_PORT
+export PUBLIC_URL=$url
 curl() { command curl --connect-to "localhost:$SMOKE_PORT:$SMOKE_HOST:$SMOKE_PORT" "$@"; }
-compose() { docker compose --progress quiet -f scripts/smoke.yml "$@"; }
+compose() { docker compose --progress quiet -p theca-smoke -f docker-compose.yml -f scripts/smoke.yml "$@"; }
 
 core=$(scripts/core-version.sh)
 echo "Building the image (core $core)..."
