@@ -1,0 +1,23 @@
+# Changelog
+
+Every release of Theca CE: the image assembling `web` and the `core` it is built for.
+## [0.1.0] - 2026-10-08
+
+### Features
+
+- The CE image, its smoke test and release tooling
+- Web 0.2.0 (core 0.17.0)
+- The compose, with Postgres and secrets as read-only files
+- Examples, S3 with Garage, Caddy, Traefik, OIDC with Authelia
+- Web 0.3.0 (core 0.18.0), files keep their times; bisync tested
+
+### Fixes
+
+- Web 0.2.1 (core 0.17.1)
+- Web 0.3.1, a file's page shows its modification time
+
+### Documentation
+
+- Bootstrap the ce repository
+- Postgres 18+, as core's configuration says
+- README and SELF-HOSTING.md, screenshots taken by a script
