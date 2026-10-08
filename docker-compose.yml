@@ -1,5 +1,6 @@
-# Theca CE: the server (with the web app) and Postgres. HTTPS is your reverse
-# proxy's, and required: the server listens on 127.0.0.1:8080, plain HTTP.
+# Theca CE: the server (with the web app) and Postgres. SELF-HOSTING.md has
+# the details; HTTPS is your reverse proxy's, and required (the server listens
+# on 127.0.0.1:8080, plain HTTP).
 #
 # Before the first start, next to this file:
 #   echo PUBLIC_URL=https://cloud.example.com > .env
@@ -10,8 +11,6 @@
 #   openssl rand -hex 32 > secrets/data.key
 #   chmod 644 secrets/*
 # Then: docker compose up -d, and the setup link is in docker compose logs theca.
-# Back up the database, the data volume and secrets/ (data.key lost: every
-# TOTP must be set up again).
 name: theca
 
 services:
