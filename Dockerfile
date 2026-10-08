@@ -1,7 +1,7 @@
 # The CE image: core's server serving web's build (WEB_DIR). Nothing is built
 # here. WEB_VERSION is the one pin; CORE_VERSION is the core that web is for,
 # read from its label by scripts/core-version.sh and passed in, never written.
-ARG WEB_VERSION=0.2.0
+ARG WEB_VERSION=0.2.1
 ARG CORE_VERSION
 FROM git.pband.ch/theca/web:${WEB_VERSION} AS web
 
