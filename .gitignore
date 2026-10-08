@@ -1,0 +1,6 @@
+._*
+.DS_Store
+claude*.sh
+.tags
+.secrets/
+.smoke/

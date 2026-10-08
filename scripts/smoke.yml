@@ -1,0 +1,53 @@
+# The smoke test's instance (scripts/smoke.sh): the image just built and
+# Postgres, secrets as read-only files, as the CE compose will run them.
+name: theca-smoke
+
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: theca
+      POSTGRES_DB: theca
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      # The server refuses other collations.
+      POSTGRES_INITDB_ARGS: --locale-provider=builtin --builtin-locale=C.UTF-8
+    secrets: [postgres_password]
+    healthcheck:
+      test: pg_isready -U theca -d theca
+      interval: 2s
+      retries: 30
+
+  theca:
+    image: theca-ce:smoke
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL__FILE: /run/secrets/database_url
+      SERVER_KEY__FILE: /run/secrets/server.key
+      DATA_KEY__FILE: /run/secrets/data.key
+      PUBLIC_URL: http://localhost:${SMOKE_PORT}
+      # smoke.sh sets the instance up through the API.
+      SETUP_OPEN: "true"
+    secrets: [database_url, server.key, data.key]
+    volumes:
+      - data:/data
+    ports:
+      - ${SMOKE_BIND}:${SMOKE_PORT}:8080
+    # The image's check, more often: --wait returns sooner.
+    healthcheck:
+      interval: 2s
+      retries: 30
+
+secrets:
+  postgres_password:
+    file: ${SMOKE_DIR}/postgres_password
+  database_url:
+    file: ${SMOKE_DIR}/database_url
+  server.key:
+    file: ${SMOKE_DIR}/server.key
+  data.key:
+    file: ${SMOKE_DIR}/data.key
+
+volumes:
+  data:

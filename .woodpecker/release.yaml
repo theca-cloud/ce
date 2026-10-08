@@ -1,0 +1,59 @@
+# Release candidates (dev) and releases (prod), once the checks passed: the CE
+# image, and on prod the tag and the Gitea release. The version is VERSION's,
+# written by scripts/release.sh (see the release process in
+# docs/CONTRIBUTING.md). Pushes filtered as the checks are (ci.yaml), and
+# skipped when only the checks changed; manual runs always.
+when:
+  - event: push
+    branch: [dev, prod]
+    # The image didn't change: what ci.yaml skips, plus what only the checks read.
+    path:
+      exclude: ["**/*.md", "roadmap/**", "scripts/install-hooks.sh", "scripts/release.sh", "LICENSE", ".githooks/**", "cliff.toml", ".gitignore", "scripts/ci.sh", "scripts/smoke.sh", "scripts/smoke.yml", ".woodpecker/ci.yaml"]
+    # Not the release merge coming back into dev: prod just tested that very code.
+    evaluate: 'not (CI_COMMIT_BRANCH == "dev" && CI_COMMIT_MESSAGE startsWith "Merge branch ''dev'' into prod")'
+  - event: manual
+    branch: [dev, prod]
+
+depends_on: [ci]
+
+variables:
+  # core's CI image: sh, curl, jq, git.
+  - &tools
+    image: git.pband.ch/theca/ci-rust:1.98.0
+    pull: true
+    environment:
+      GITEA_TOKEN:
+        from_secret: gitea_token
+
+steps:
+  # The image tags, and the core the pinned web is for written into the
+  # Dockerfile; on prod, refuses a version already released.
+  - name: tags
+    <<: *tools
+    depends_on: []
+    commands:
+      - scripts/release-ci.sh tags
+
+  # Both platforms are copies (nothing compiled): no emulated build.
+  - name: image
+    image: woodpeckerci/plugin-docker-buildx:5.0.0
+    depends_on: [tags]
+    settings:
+      registry: git.pband.ch
+      repo: git.pband.ch/theca/ce
+      platforms: linux/amd64,linux/arm64
+      dockerfile: Dockerfile
+      tags_file: .tags
+      username:
+        from_secret: gitea_user
+      password:
+        from_secret: gitea_token
+
+  # The tag and the Gitea release.
+  - name: publish
+    <<: *tools
+    depends_on: [image]
+    when:
+      - branch: prod
+    commands:
+      - scripts/release-ci.sh publish
