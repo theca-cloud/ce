@@ -12,7 +12,12 @@
 #   --caddy     examples/caddy/ in front, over HTTPS (the test's own CA instead
 #   --traefik   of Let's Encrypt; the server trusts it, as a private one)
 #   --authelia  examples/authelia/ (with --caddy): a login through it
+#   --bisync    two-way sync with rclone bisync over WebDAV (rclone's image), as
+#               SELF-HOSTING.md sets it up: the files' times kept, edits on
+#               both sides (same-size ones), a deletion
 #   --keep      leave it running (stop it: docker compose -p theca-smoke down -v)
+# CORE_VERSION: another core than the pinned web's (e.g. 0-rc, to try one not
+# released yet); the version check is then skipped.
 # SMOKE_HOST: where the published ports are reached (CI: the Docker daemon's
 # host); curl still uses the instance's names (localhost, garage, or the
 # example.com domains behind a proxy). Needs Docker, curl, jq, openssl, and
@@ -20,16 +25,17 @@
 set -eu
 cd "$(dirname "$0")/.."
 
-s3= proxy= authelia= keep=
+s3= proxy= authelia= bisync= keep=
 for arg in "$@"; do
     case "$arg" in
     --s3) s3=1 ;;
     --caddy) proxy=caddy ;;
     --traefik) proxy=traefik ;;
     --authelia) authelia=1 ;;
+    --bisync) bisync=1 ;;
     --keep) keep=1 ;;
     *)
-        echo "usage: scripts/smoke.sh [--s3] [--caddy | --traefik] [--authelia] [--keep]" >&2
+        echo "usage: scripts/smoke.sh [--s3] [--caddy | --traefik] [--authelia] [--bisync] [--keep]" >&2
         exit 2
         ;;
     esac
@@ -75,7 +81,7 @@ files="$files -f $PWD/scripts/smoke.yml"
 # shellcheck disable=SC2086 # $files: one word per file and flag
 compose() { docker compose --progress quiet -p theca-smoke $files "$@"; }
 
-core=$(scripts/core-version.sh)
+core=${CORE_VERSION:-$(scripts/core-version.sh)}
 echo "Building the image (core $core)..."
 docker build -q --build-arg CORE_VERSION="$core" -t theca-ce:smoke . >/dev/null
 
@@ -90,6 +96,7 @@ printf postgres://theca:%s@postgres:5432/theca "$password" >"$dir/secrets/databa
 openssl rand -hex 32 >"$dir/secrets/server.key"
 openssl rand -hex 32 >"$dir/secrets/data.key"
 chmod 644 "$dir"/secrets/*
+chmod 700 "$dir/secrets" # as SELF-HOSTING.md advises
 if [ -n "$s3" ]; then
     cp examples/s3-garage/compose.s3.yml examples/s3-garage/garage.toml examples/s3-garage/garage-init.sh "$dir/"
     echo "GK$(openssl rand -hex 12)" >"$dir/secrets/s3_access_key"
@@ -195,7 +202,7 @@ api() { # method path [json]
         ${3:+-d "$3"} "$url/api/v1$2"
 }
 
-echo "Checking $url${s3:+ with S3}${proxy:+ behind $proxy}${authelia:+ and Authelia}..."
+echo "Checking $url${s3:+ with S3}${proxy:+ behind $proxy}${authelia:+ and Authelia}${bisync:+ and bisync}..."
 # The web app's index.html on / and on any path the API doesn't use.
 curl -fsS "$url/" | grep -q '/_app/immutable/entry/start\.' || fail "/ is not the web app"
 curl -fsS "$url/some/deep/link" | grep -q '/_app/immutable/entry/start\.' || fail "a deep link is not the web app"
@@ -203,7 +210,7 @@ status=$(curl -s -o /dev/null -w '%{http_code}' "$url/api/v1/no-such-route")
 [ "$status" = 404 ] || fail "an unknown API path answered $status, not 404"
 
 server=$(curl -fsS "$url/api/version" | jq -r .server)
-[ "$server" = "$core" ] || fail "the server is core $server, not $core"
+[ -n "${CORE_VERSION:-}" ] || [ "$server" = "$core" ] || fail "the server is core $server, not $core"
 
 if [ -n "$s3" ]; then
     # The URL browsers use too (the storage has one host).
@@ -267,4 +274,41 @@ if [ -n "$authelia" ]; then
     [ "$me" = "$email" ] || fail "the session through Authelia is $me's, not $email's"
 fi
 
-echo "Smoke test passed${s3:+ with S3}${proxy:+ behind $proxy}${authelia:+ and Authelia}: web $(sed -n 's/^ARG WEB_VERSION=//p' Dockerfile), core $core"
+if [ -n "$bisync" ]; then
+    # SELF-HOSTING.md's setup: the drive, rclone's owncloud vendor (it sends the
+    # files' modification times, which the server keeps), the app password.
+    mkdir -p "$dir/rclone" "$dir/sync"
+    rclone() {
+        # Its config, and its cache: bisync's listings between runs.
+        docker run --rm --network theca-smoke_default -v "$dir/rclone:/config/rclone" -v "$dir/sync:/data" \
+            -v "$dir/rclone:/root/.cache/rclone" \
+            rclone/rclone:1.75 "$@"
+    }
+    printf '[theca]\ntype = webdav\nurl = http://theca:8080/dav/\nvendor = owncloud\nuser = smoke\npass = %s\n' \
+        "$(rclone obscure "$app")" >"$dir/rclone/rclone.conf"
+    remote=theca:Smoke/Files
+    echo "first" >"$dir/sync/notes.txt"
+    touch -t 202001020304 "$dir/sync/notes.txt" # an older file, as real ones are
+    rclone bisync /data "$remote" --resync -q || fail "the first bisync (--resync)"
+    [ -f "$dir/sync/file" ] || fail "bisync didn't bring the server's file"
+    # The server kept the file's time (X-OC-Mtime): rclone finds both sides
+    # equal, instead of uploading everything again at every run.
+    again=$(rclone copy /data "$remote" --dry-run 2>&1 | grep -c 'Skipped copy' || true)
+    [ "$again" = 0 ] || fail "the server didn't keep the files' times: rclone would upload $again again"
+    # Edits keeping the size on both sides (one-second precision: later), and
+    # a deletion.
+    sleep 2
+    echo "FIRST" >"$dir/sync/notes.txt"
+    printf 'FILE' | curl -fsS -u "smoke:$app" -T - "$url/dav/Smoke/Files/hello.txt"
+    rclone bisync /data "$remote" -q || fail "bisync"
+    sleep 2
+    printf 'file' | curl -fsS -u "smoke:$app" -T - "$url/dav/Smoke/Files/hello.txt"
+    rm "$dir/sync/file"
+    rclone bisync /data "$remote" -q || fail "bisync"
+    [ "$(curl -fsS -u "smoke:$app" "$url/dav/Smoke/Files/notes.txt")" = FIRST ] || fail "a local edit didn't reach the server"
+    [ "$(cat "$dir/sync/hello.txt")" = file ] || fail "a server edit keeping the size didn't reach the local side"
+    status=$(curl -s -o /dev/null -w '%{http_code}' -u "smoke:$app" "$url/dav/Smoke/Files/file")
+    [ "$status" = 404 ] || fail "a local deletion didn't reach the server ($status)"
+fi
+
+echo "Smoke test passed${s3:+ with S3}${proxy:+ behind $proxy}${authelia:+ and Authelia}${bisync:+ and bisync}: web $(sed -n 's/^ARG WEB_VERSION=//p' Dockerfile), core $core"

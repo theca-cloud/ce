@@ -1,7 +1,8 @@
 #!/usr/bin/env sh
 # Every CI check: the shipped compose is valid, alone and with each example;
-# then the smoke test runs it (scripts/smoke.sh): plain, then with every
-# example (S3 behind Caddy with an Authelia login, S3 behind Traefik).
+# then the smoke test runs it (scripts/smoke.sh): with two-way sync through
+# rclone, then with every example (S3 behind Caddy with an Authelia login, S3
+# behind Traefik).
 #   scripts/ci.sh          everything (the pipeline)
 #   scripts/ci.sh quick    the compose files and the plain smoke test (the
 #                          pre-push hook: the examples' runs take minutes)
@@ -27,7 +28,9 @@ config -f examples/traefik/compose.traefik.yml
 config -f examples/caddy/compose.caddy.yml -f examples/authelia/compose.authelia.yml
 echo "Compose files valid"
 
-scripts/smoke.sh
-[ "${1:-all}" = quick ] && exit 0
+if [ "${1:-all}" = quick ]; then
+    exec scripts/smoke.sh
+fi
+scripts/smoke.sh --bisync
 scripts/smoke.sh --s3 --caddy --authelia
 scripts/smoke.sh --s3 --traefik
