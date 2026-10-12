@@ -36,7 +36,7 @@ services:
     # The exact version until 1.0: an upgrade may mean starting over then
     # (the database schema is still rewritten between releases), so it's
     # chosen, never pulled by a restart.
-    image: git.pband.ch/theca/ce:0.1.0
+    image: git.pband.ch/theca/ce:0.2.0
     restart: unless-stopped
     depends_on:
       postgres:
