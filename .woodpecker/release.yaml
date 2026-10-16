@@ -18,18 +18,6 @@ clone:
       tags: true
 
 steps:
-  # Until GitHub has core and web (then this step and the build_args go:
-  # the Dockerfile fetches them itself).
-  - name: sources
-    image: alpine/git:v2.54.0
-    environment:
-      GITEA_USER:
-        from_secret: gitea_user
-      GITEA_TOKEN:
-        from_secret: gitea_token
-    commands:
-      - scripts/sources.sh
-
   # The image tags: latest, 1, 1.2, 1.2.3.
   - name: tags
     image: alpine:3.22
@@ -45,7 +33,7 @@ steps:
   # 60-minute default timeout.
   - name: image
     image: woodpeckerci/plugin-docker-buildx:5.0.0
-    depends_on: [sources, tags]
+    depends_on: [tags]
     settings:
       repo:
         - git.pband.ch/${CI_REPO}
@@ -53,11 +41,6 @@ steps:
       platforms: linux/amd64,linux/arm64
       dockerfile: Dockerfile
       tags_file: .tags
-      # The plugin can't pass named contexts: the sources as folders of the
-      # build context instead.
-      build_args:
-        - CORE_SOURCE=.sources/core
-        - WEB_SOURCE=.sources/web
       logins:
         - registry: https://git.pband.ch
           username:

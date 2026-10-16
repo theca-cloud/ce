@@ -41,12 +41,6 @@ steps:
       DOCKER_HOST: tcp://docker:2375
       # Where the instance's published port is reached: the daemon's host.
       SMOKE_HOST: docker
-      # core's and web's sources from Gitea until GitHub has them
-      # (scripts/sources.sh): then these go.
-      GITEA_USER:
-        from_secret: gitea_user
-      GITEA_TOKEN:
-        from_secret: gitea_token
     commands:
       - apk add -q curl jq openssl git
       - until docker info >/dev/null 2>&1; do sleep 1; done
