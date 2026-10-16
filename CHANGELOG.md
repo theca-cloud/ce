@@ -1,6 +1,5 @@
 # Changelog
 
-Every release of Theca CE: the image assembling `web` and the `core` it is built for.
 ## [0.2.0] - 2026-10-12
 
 ### Features

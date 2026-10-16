@@ -15,7 +15,7 @@ From an empty folder to a running instance, then what keeps it running: the reve
 In an empty folder, the release's compose:
 
 ```sh
-curl -fsSLO https://git.pband.ch/theca/ce/releases/download/v0.1.0/docker-compose.yml
+curl -fsSLO https://raw.githubusercontent.com/theca-cloud/ce/main/docker-compose.yml
 ```
 
 It runs Theca (the server and the web app, one image) and Postgres. The address users open goes in `.env`:
@@ -106,7 +106,7 @@ docker network inspect theca_default --format '{{(index .IPAM.Config 0).Gateway}
 
 Instead of a folder on the server, any S3-compatible storage: Garage, MinIO, a provider. Browsers then upload and download straight to it, with links the server signs, so it needs **its own HTTPS address** (e.g. `s3.example.com`) and **a CORS rule** allowing your `PUBLIC_URL` (methods `PUT` and `GET`, headers `x-amz-checksum-sha256` and `If-None-Match`, `ETag` exposed). The server reaches the storage at that same address.
 
-**[examples/s3-garage/](examples/s3-garage)** runs [Garage](https://garagehq.deuxfleurs.fr/) next to Theca and sets everything up: the bucket, its key, the CORS rule, at every start. For another S3 storage, the rule's XML is in core's [CONFIGURATION.md](https://git.pband.ch/theca/core/src/branch/prod/CONFIGURATION.md) (Storage backends).
+**[examples/s3-garage/](examples/s3-garage)** runs [Garage](https://garagehq.deuxfleurs.fr/) next to Theca and sets everything up: the bucket, its key, the CORS rule, at every start. For another S3 storage, the rule's XML is in core's [CONFIGURATION.md](https://github.com/theca-cloud/core/blob/main/CONFIGURATION.md) (Storage backends).
 
 Each library keeps the storage it was created on; the default one is chosen in **Administration → Storages**. The key files are paths the server reads (`/run/secrets/...`), never values: mount them as secrets, as the example does.
 
@@ -213,9 +213,9 @@ docker compose up -d
 
 ## Upgrades
 
-**Before 1.0**, the compose names an exact version, and an upgrade is a choice: read the release notes first. Until 1.0, **an upgrade may mean starting over**, the database's structure still changing between releases: copy your files out (WebDAV, rclone), install the new release in a new folder, copy them back in. The notes say when it's the case.
+The compose names the major version (`thecacloud/ce:1`): `docker compose pull && docker compose up -d`, the database upgraded at startup. A failed upgrade changes nothing (it runs in one transaction). A new major version is a choice: read its release notes, then change the tag.
 
-**From 1.0**, the compose names the major version (`ce:1`): `docker compose pull && docker compose up -d`, the database upgraded at startup. A failed upgrade changes nothing (it runs in one transaction).
+(The 0.x betas could mean starting over at an upgrade; from 1.0 on, data only moves forward.)
 
 **Postgres** is pinned to its major version (18): minor updates come with `docker compose pull`. A new major version needs its data converted: back up the database (above), point the compose at the new image with a new volume, restore.
 

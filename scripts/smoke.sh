@@ -16,12 +16,13 @@
 #               SELF-HOSTING.md sets it up: the files' times kept, edits on
 #               both sides (same-size ones), a deletion
 #   --keep      leave it running (stop it: docker compose -p theca-smoke down -v)
-# CORE_VERSION: another core than the pinned web's (e.g. 0-rc, to try one not
-# released yet); the version check is then skipped.
+# CORE_SRC, WEB_SRC: build from these source folders instead of the pinned
+# releases on GitHub (e.g. to try a core not released yet); the version check
+# is then skipped. A clean export (`git -C ../core archive HEAD | tar -x -C <dir>`),
+# not a working tree: the whole folder is copied, target/ and node_modules/ too.
 # SMOKE_HOST: where the published ports are reached (CI: the Docker daemon's
 # host); curl still uses the instance's names (localhost, garage, or the
-# example.com domains behind a proxy). Needs Docker, curl, jq, openssl, and
-# docker login git.pband.ch.
+# example.com domains behind a proxy). Needs Docker (buildx), curl, jq, openssl.
 set -eu
 cd "$(dirname "$0")/.."
 
@@ -81,9 +82,10 @@ files="$files -f $PWD/scripts/smoke.yml"
 # shellcheck disable=SC2086 # $files: one word per file and flag
 compose() { docker compose --progress quiet -p theca-smoke $files "$@"; }
 
-core=${CORE_VERSION:-$(scripts/core-version.sh)}
-echo "Building the image (core $core)..."
-docker build -q --build-arg CORE_VERSION="$core" -t theca-ce:smoke . >/dev/null
+core=$(sed -n 's/^ARG CORE_VERSION=//p' Dockerfile)
+echo "Building the image (core ${CORE_SRC:-$core}, web ${WEB_SRC:-pinned})..."
+docker buildx build -q --load ${CORE_SRC:+--build-context core-src="$CORE_SRC"} \
+    ${WEB_SRC:+--build-context web-src="$WEB_SRC"} -t theca-ce:smoke . >/dev/null
 
 # A self-hoster's folder: the compose and the examples' files, secrets/ as the
 # compose's header and the examples' READMEs say.
@@ -210,7 +212,7 @@ status=$(curl -s -o /dev/null -w '%{http_code}' "$url/api/v1/no-such-route")
 [ "$status" = 404 ] || fail "an unknown API path answered $status, not 404"
 
 server=$(curl -fsS "$url/api/version" | jq -r .server)
-[ -n "${CORE_VERSION:-}" ] || [ "$server" = "$core" ] || fail "the server is core $server, not $core"
+[ -n "${CORE_SRC:-}" ] || [ "$server" = "$core" ] || fail "the server is core $server, not $core"
 
 if [ -n "$s3" ]; then
     # The URL browsers use too (the storage has one host).

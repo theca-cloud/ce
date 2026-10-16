@@ -33,10 +33,10 @@ services:
       retries: 12
 
   theca:
-    # The exact version until 1.0: an upgrade may mean starting over then
-    # (the database schema is still rewritten between releases), so it's
-    # chosen, never pulled by a restart.
-    image: git.pband.ch/theca/ce:0.2.0
+    # The major version: `docker compose pull` upgrades within it, the
+    # database migrated forward at startup. A new major is a choice: read its
+    # release notes.
+    image: thecacloud/ce:1
     restart: unless-stopped
     depends_on:
       postgres:

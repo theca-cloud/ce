@@ -4,3 +4,4 @@ claude*.sh
 .tags
 .secrets/
 .smoke/
+.sources/

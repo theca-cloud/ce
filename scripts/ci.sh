@@ -27,6 +27,9 @@ config -f examples/caddy/compose.caddy.yml
 config -f examples/traefik/compose.traefik.yml
 config -f examples/caddy/compose.caddy.yml -f examples/authelia/compose.authelia.yml
 echo "Compose files valid"
+# Until GitHub has core and web, their sources come from Gitea: delete this
+# line then, and the Dockerfile fetches them itself.
+[ -n "${CORE_SRC:-}" ] || { scripts/sources.sh && export CORE_SRC="$PWD/.sources/core" WEB_SRC="$PWD/.sources/web"; }
 
 if [ "${1:-all}" = quick ]; then
     exec scripts/smoke.sh

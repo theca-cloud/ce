@@ -1,0 +1,70 @@
+# Release candidates: on dev, once the checks passed, the image for amd64 and
+# arm64, tagged with the version the next release will have (git-cliff, as
+# scripts/release.sh computes it) plus -rc: rc, 1-rc, 1.2-rc, 1.2.3-rc. On
+# Gitea only. The app inside still reports the last release's version: VERSION
+# is bumped by the release itself.
+when:
+  - event: push
+    branch: dev
+    # The image didn't change: what ci.yaml skips, plus what only the checks read.
+    path:
+      exclude: ["**/*.md", "docs/**", "roadmap/**", "LICENSE", ".gitignore", "cliff.toml", ".githooks/**", "scripts/install-hooks.sh", "scripts/release.sh", ".woodpecker/ci.yaml", ".woodpecker/release.yaml", "docker-compose.yml", "examples/**", "scripts/ci.sh", "scripts/smoke*"]
+    # Not the version commit coming back into dev: that is a release, not a candidate.
+    evaluate: 'not (trim(CI_COMMIT_MESSAGE) matches "^[0-9]+[.][0-9]+[.][0-9]+$")'
+  - event: manual
+    branch: dev
+
+depends_on: [ci]
+
+# git-cliff needs the history since the last release, and its tag.
+clone:
+  - name: git
+    image: woodpeckerci/plugin-git:2.10.1
+    settings:
+      partial: false
+      depth: 0
+      tags: true
+
+steps:
+  # Until GitHub has core and web (then this step and the build_args go:
+  # the Dockerfile fetches them itself).
+  - name: sources
+    image: alpine/git:v2.54.0
+    environment:
+      GITEA_USER:
+        from_secret: gitea_user
+      GITEA_TOKEN:
+        from_secret: gitea_token
+    commands:
+      - scripts/sources.sh
+
+  - name: tags
+    image: ghcr.io/orhun/git-cliff/git-cliff:2.14.2
+    commands:
+      # 0.x's tags carry a `v`, kept by git-cliff's bump.
+      - v=$$(git-cliff --bumped-version) && v=$${v#v}
+      - test -n "$$v"
+      - printf '%s\n' rc "$${v%%.*}-rc" "$${v%.*}-rc" "$$v-rc" > .tags
+      - cat .tags
+
+  # The only privileged plugin the server trusts (WOODPECKER_PLUGINS_PRIVILEGED):
+  # keep this exact version. arm64's server compiles under QEMU: about 28
+  # minutes on the agent (measured), within the 60-minute default timeout.
+  - name: image
+    image: woodpeckerci/plugin-docker-buildx:5.0.0
+    depends_on: [sources, tags]
+    settings:
+      registry: git.pband.ch
+      repo: git.pband.ch/${CI_REPO}
+      platforms: linux/amd64,linux/arm64
+      dockerfile: Dockerfile
+      tags_file: .tags
+      # The plugin can't pass named contexts: the sources as folders of the
+      # build context instead.
+      build_args:
+        - CORE_SOURCE=.sources/core
+        - WEB_SOURCE=.sources/web
+      username:
+        from_secret: gitea_user
+      password:
+        from_secret: gitea_token
