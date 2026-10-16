@@ -2,7 +2,12 @@
 # The README's screenshots (screenshots/*.png), retaken at releases: the smoke
 # test's instance (the image just built), filled with demo data through the API
 # and WebDAV, each page shot by Playwright's CLI with the admin's session.
-#   scripts/screenshots.sh
+#   scripts/screenshots.sh                     every page from that instance
+#   scripts/screenshots.sh URL EMAIL PASSWORD  the user's pages (browse, a file,
+#       search, trash, login) from a live instance instead, e.g. the demo just
+#       after its reset; the organization's and the admin's pages stay local
+#       (the admin pages need an admin; SEARCH and PICTURE fit the queries
+#       to its content, e.g. SEARCH=jpg PICTURE=.jpg for the demo)
 # Needs what scripts/smoke.sh needs, and npx (Playwright: web's version, its
 # Chromium installed once with npx playwright@<version> install chromium).
 set -eu
@@ -13,12 +18,15 @@ playwright=1.63.0 # web's @playwright/test
 url=http://localhost:8099
 dir=.smoke
 out=screenshots
+search=${SEARCH:-2026} # the search page's query
+picture=${PICTURE:-.png} # live: the file page's picture, the first name matching it
+jar=$dir/cookies
 
 scripts/smoke.sh --keep
 trap 'docker compose -p theca-smoke down -v >/dev/null 2>&1; rm -rf "$dir"' EXIT
 
 api() { # method path [json]
-    curl -fsS -X "$1" -b "$dir/cookies" -H 'Content-Type: application/json' ${3:+-d "$3"} "$url/api/v1$2"
+    curl -fsS -X "$1" -b "$jar" -H 'Content-Type: application/json' ${3:+-d "$3"} "$url/api/v1$2"
 }
 app=$(api POST /auth/app-passwords '{"name": "demo"}' | jq -r .password)
 dav() { # method path [curl options]: path below /dav/, spaces allowed
@@ -97,10 +105,13 @@ child() { # node name: the child's ID
 offsite=$(child "$(api GET /libraries | jq -r --arg l "$photos" '.[] | select(.id == $l) | .root')" "Team offsite 2026")
 lake=$(child "$offsite" Lake.png)
 
-# The session for the browser (localhost counts as secure: the Secure cookie goes).
-session=$(awk '$6 == "theca_session" {print $7}' "$dir/cookies")
-jq -n --arg v "$session" '{cookies: [{name: "theca_session", value: $v, domain: "localhost", path: "/",
-    expires: -1, httpOnly: true, secure: true, sameSite: "Lax"}], origins: []}' >"$dir/state.json"
+state() { # the session for the browser (localhost counts as secure: the Secure cookie goes)
+    session=$(awk '$6 == "theca_session" {print $7}' "$jar")
+    host=${url#*://}
+    jq -n --arg v "$session" --arg d "${host%%[:/]*}" '{cookies: [{name: "theca_session", value: $v, domain: $d,
+        path: "/", expires: -1, httpOnly: true, secure: true, sameSite: "Lax"}], origins: []}' >"$dir/state.json"
+}
+state
 shot() { # name path height [playwright options]
     name=$1 path=$2 height=$3
     shift 3
@@ -111,10 +122,21 @@ shot() { # name path height [playwright options]
 
 echo "Screenshots..."
 mkdir -p "$out"
-shot browse "/$org/$docs" 900 --load-storage "$dir/state.json"
-shot file "/$org/$photos/$lake" 900 --load-storage "$dir/state.json"
-shot search "/search?q=2026" 900 --load-storage "$dir/state.json"
-shot trash "/trash?library=$docs" 900 --load-storage "$dir/state.json"
 shot organization "/$org/settings" 900 --load-storage "$dir/state.json"
 shot admin "/admin/settings" 900 --load-storage "$dir/state.json"
+if [ $# -ge 3 ]; then
+    url=${1%/} jar=$dir/remote
+    curl -fsS -c "$jar" -H 'Content-Type: application/json' -o /dev/null \
+        -d "$(jq -n --arg e "$2" --arg p "$3" '{email: $e, password: $p}')" "$url/api/v1/auth/login"
+    state
+    # Its first company organization and library, and a picture in it.
+    org=$(api GET /me | jq -r '[.organizations[] | select(.personal | not)][0].organization')
+    docs=$(api GET /libraries | jq -r --arg o "$org" '[.[] | select(.organization == $o)] | sort_by(.name)[0].id')
+    picture=$(api GET "/search?q=$picture&organization=$org" | jq -c '.[0]')
+    photos=$(printf %s "$picture" | jq -r .library) lake=$(printf %s "$picture" | jq -r .id)
+fi
+shot browse "/$org/$docs" 900 --load-storage "$dir/state.json"
+shot file "/$org/$photos/$lake" 900 --load-storage "$dir/state.json"
+shot search "/search?q=$search" 900 --load-storage "$dir/state.json"
+shot trash "/trash?library=$docs" 900 --load-storage "$dir/state.json"
 shot login "/login" 900

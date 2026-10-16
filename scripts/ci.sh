@@ -1,5 +1,6 @@
 #!/usr/bin/env sh
-# Every CI check: the shipped compose is valid, alone and with each example;
+# Every CI check: OPERATING.md fits Docker Hub's page and its configuration
+# reference is core's; the shipped compose is valid, alone and with each example;
 # then the smoke test runs it (scripts/smoke.sh): with two-way sync through
 # rclone, then with every example (S3 behind Caddy with an Authelia login, S3
 # behind Traefik).
@@ -16,6 +17,13 @@ all | quick) ;;
     exit 2
     ;;
 esac
+
+# OPERATING.md is thecacloud/ce's Docker Hub page: Docker Hub refuses more
+# than 25,000 characters (bytes counted: stricter).
+size=$(wc -c <OPERATING.md | tr -d " ")
+[ "$size" -le 25000 ] ||
+    { echo "OPERATING.md is $size bytes: Docker Hub's page takes 25,000 at most" >&2; exit 1; }
+scripts/operating.sh --check
 
 # The variables the files require, with example values.
 export PUBLIC_URL=https://cloud.example.com DOMAIN=cloud.example.com ACME_EMAIL=admin@example.com \
