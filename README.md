@@ -4,7 +4,7 @@
 
 This is the **Community Edition**: everything below, free and open source (AGPL-3.0), in one Docker image.
 
-![The file browser](screenshots/browse.png)
+![The file browser](https://raw.githubusercontent.com/theca-cloud/ce/main/screenshots/browse.png)
 
 ## What it does
 
@@ -23,32 +23,32 @@ This is the **Community Edition**: everything below, free and open source (AGPL-
 
 | | |
 |---|---|
-| ![A file's preview and versions](screenshots/file.png) | ![Search](screenshots/search.png) |
-| ![An organization's settings](screenshots/organization.png) | ![The admin's settings](screenshots/admin.png) |
+| ![A file's preview and versions](https://raw.githubusercontent.com/theca-cloud/ce/main/screenshots/file.png) | ![Search](https://raw.githubusercontent.com/theca-cloud/ce/main/screenshots/search.png) |
+| ![An organization's settings](https://raw.githubusercontent.com/theca-cloud/ce/main/screenshots/organization.png) | ![The admin's settings](https://raw.githubusercontent.com/theca-cloud/ce/main/screenshots/admin.png) |
 
 ## Try it
 
 You need Docker, and a domain with HTTPS through a reverse proxy (on your own computer, `localhost` does).
 
 ```sh
-curl -fsSLO https://git.pband.ch/theca/ce/releases/download/v0.1.0/docker-compose.yml
+curl -fsSLO https://raw.githubusercontent.com/theca-cloud/ce/main/docker-compose.yml
 # then the commands at the top of docker-compose.yml: .env and the secrets
 docker compose up -d
 docker compose logs theca   # the setup link
 ```
 
-**[SELF-HOSTING.md](SELF-HOSTING.md)** says it all: the reverse proxy, S3 storage, OIDC, WebDAV and sync, backups, upgrades. Ready-made setups are in **[examples/](examples)**: Garage (S3), Caddy, Traefik, Authelia.
+**[SELF-HOSTING.md](https://github.com/theca-cloud/ce/blob/main/SELF-HOSTING.md)** says it all: the reverse proxy, S3 storage, OIDC, WebDAV and sync, backups, upgrades. Ready-made setups are in **[examples/](https://github.com/theca-cloud/ce/tree/main/examples)**: Garage (S3), Caddy, Traefik, Authelia.
 
 ## Status
 
-**Beta** (0.x). It works, and is tested end to end at every change, but until 1.0 an upgrade may mean starting over: the database's structure still changes between releases. Keep your files somewhere else too for now.
+**Stable** since 1.0: an upgrade keeps your data. The database is migrated forward at startup, and every release is tested upgrading the data of the releases before it. Within a major version (`thecacloud/ce:1`), nothing you rely on breaks.
 
-Theca also comes as a hosted service and, later, an Enterprise Edition (company features: LDAP, SAML, audit logs). The Community Edition stays complete: nothing above is held back.
+Later, Theca will also come as a hosted service and an Enterprise Edition (company features: LDAP, SAML, audit logs). The Community Edition stays complete: nothing above is held back.
 
 ## More
 
-- How it's built and why: [the design documents](https://git.pband.ch/theca/docs).
-- The parts: [core](https://git.pband.ch/theca/core) (the server), [web](https://git.pband.ch/theca/web) (the web app), [cli](https://git.pband.ch/theca/cli) (the `theca` command line).
-- Contributing: [CONTRIBUTING.md](https://git.pband.ch/theca/docs/src/branch/prod/CONTRIBUTING.md).
+- The image: [`thecacloud/ce`](https://hub.docker.com/r/thecacloud/ce) on Docker Hub, built from this repository's `Dockerfile`, which builds everything from source: `docker build .` rebuilds it.
+- The parts: [core](https://github.com/theca-cloud/core) (the server), [web](https://github.com/theca-cloud/web) (the web app).
+- Contributing: [CONTRIBUTING.md](https://github.com/theca-cloud/ce/blob/main/CONTRIBUTING.md).
 
 License: AGPL-3.0.

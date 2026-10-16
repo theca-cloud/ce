@@ -1,6 +1,12 @@
 # Changelog
 
-Every release of Theca CE: the image assembling `web` and the `core` it is built for.
+## [1.0.0] - 2026-10-16
+
+### Features
+
+- CE built from source, published as thecacloud/ce (**breaking**)
+- Core 1.0.0 and web 1.0.0, their sources from GitHub
+
 ## [0.2.0] - 2026-10-12
 
 ### Features

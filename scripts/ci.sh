@@ -27,7 +27,6 @@ config -f examples/caddy/compose.caddy.yml
 config -f examples/traefik/compose.traefik.yml
 config -f examples/caddy/compose.caddy.yml -f examples/authelia/compose.authelia.yml
 echo "Compose files valid"
-
 if [ "${1:-all}" = quick ]; then
     exec scripts/smoke.sh
 fi

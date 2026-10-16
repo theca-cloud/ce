@@ -1,14 +1,17 @@
-# Every branch (dev and prod included) and pull request, when something built
-# or tested changed; manual runs always. The smoke test (scripts/ci.sh) on a
-# real Docker daemon: it builds the very Dockerfile that is published.
+# The checks, on every branch and pull request, when something built or tested
+# changed; manual runs always. The smoke test (scripts/ci.sh) on a real Docker
+# daemon: it builds the very Dockerfile that is published, for the agent's
+# platform only (amd64, native: minutes). Both platforms are built by rc.yaml
+# and release.yaml.
 when:
   - event: [push, pull_request]
-    # Nothing built or tested changed: docs, the roadmap, local-only scripts,
-    # repo housekeeping.
+    # Nothing built or tested changed: docs, local-only scripts, the other
+    # pipelines, repo housekeeping.
     path:
-      exclude: ["**/*.md", "roadmap/**", "scripts/install-hooks.sh", "scripts/release.sh", "LICENSE", ".githooks/**", "cliff.toml", ".gitignore"]
-    # Not the release merge coming back into dev: prod just tested that very code.
-    evaluate: 'not (CI_COMMIT_BRANCH == "dev" && CI_COMMIT_MESSAGE startsWith "Merge branch ''dev'' into prod")'
+      exclude: ["**/*.md", "docs/**", "roadmap/**", "LICENSE", ".gitignore", "cliff.toml", ".githooks/**", "scripts/install-hooks.sh", "scripts/release.sh", ".woodpecker/rc.yaml", ".woodpecker/release.yaml"]
+    # Not a version commit (scripts/release.sh, `1.2.3`): it only bumps the
+    # version on code dev already tested, on prod and coming back into dev.
+    evaluate: 'not (trim(CI_COMMIT_MESSAGE) matches "^[0-9]+[.][0-9]+[.][0-9]+$")'
   - event: manual
 
 # A fixed workspace path: the daemon bind-mounts the smoke test's secret files
@@ -38,13 +41,7 @@ steps:
       DOCKER_HOST: tcp://docker:2375
       # Where the instance's published port is reached: the daemon's host.
       SMOKE_HOST: docker
-      GITEA_USER:
-        from_secret: gitea_user
-      GITEA_TOKEN:
-        from_secret: gitea_token
     commands:
-      - apk add -q curl jq openssl
+      - apk add -q curl jq openssl git
       - until docker info >/dev/null 2>&1; do sleep 1; done
-      # core and web are on the private registry.
-      - printf %s "$GITEA_TOKEN" | docker login git.pband.ch -u "$GITEA_USER" --password-stdin
       - scripts/ci.sh
