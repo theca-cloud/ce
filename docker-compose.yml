@@ -1,5 +1,5 @@
-# Theca CE: the server (with the web app) and Postgres. SELF-HOSTING.md has
-# the details; HTTPS is your reverse proxy's, and required (the server listens
+# Theca CE: the server (with the web app) and Postgres. OPERATING.md has the
+# details (https://github.com/theca-cloud/ce/blob/main/OPERATING.md); HTTPS is your reverse proxy's, and required (the server listens
 # on 127.0.0.1:8080, plain HTTP).
 #
 # Before the first start, next to this file:

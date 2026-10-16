@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.1] - 2026-10-16
+
+### Documentation
+
+- A README for users with a live demo, OPERATING.md for operators
+
 ## [1.0.0] - 2026-10-16
 
 ### Features

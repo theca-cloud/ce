@@ -53,7 +53,8 @@ steps:
           password:
             from_secret: docker_hub_token
 
-  # thecacloud/ce's page on Docker Hub: README.md. Docker Hub's API, as
+  # thecacloud/ce's page on Docker Hub: OPERATING.md, the operators' documentation
+  # (README.md is GitHub's, for users). Docker Hub's API, as
   # peter-evans/dockerhub-description calls it; the token needs the Read,
   # Write, Delete scope to edit a page.
   - name: hub-page
@@ -74,8 +75,8 @@ steps:
         | curl -fsS -H "Content-Type: application/json" -d @- https://hub.docker.com/v2/auth/token
         | jq -er .access_token)
       - >-
-        jq -Rs '{description:"Theca, a self-hosted cloud storage: the Community Edition", full_description:.}'
-        README.md > page.json
+        jq -Rs '{description:"Theca, a self-hosted cloud storage: how to run it", full_description:.}'
+        OPERATING.md > page.json
       - >-
         curl -fsS -o /dev/null -X PATCH -H "Content-Type: application/json" -H "Authorization: Bearer $$access"
         -d @page.json https://hub.docker.com/v2/repositories/thecacloud/ce/

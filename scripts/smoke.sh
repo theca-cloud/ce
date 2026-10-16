@@ -13,7 +13,7 @@
 #   --traefik   of Let's Encrypt; the server trusts it, as a private one)
 #   --authelia  examples/authelia/ (with --caddy): a login through it
 #   --bisync    two-way sync with rclone bisync over WebDAV (rclone's image), as
-#               SELF-HOSTING.md sets it up: the files' times kept, edits on
+#               OPERATING.md sets it up: the files' times kept, edits on
 #               both sides (same-size ones), a deletion
 #   --keep      leave it running (stop it: docker compose -p theca-smoke down -v)
 # CORE_SRC, WEB_SRC: build from these source folders instead of the pinned
@@ -98,7 +98,7 @@ printf postgres://theca:%s@postgres:5432/theca "$password" >"$dir/secrets/databa
 openssl rand -hex 32 >"$dir/secrets/server.key"
 openssl rand -hex 32 >"$dir/secrets/data.key"
 chmod 644 "$dir"/secrets/*
-chmod 700 "$dir/secrets" # as SELF-HOSTING.md advises
+chmod 700 "$dir/secrets" # as OPERATING.md advises
 if [ -n "$s3" ]; then
     cp examples/s3-garage/compose.s3.yml examples/s3-garage/garage.toml examples/s3-garage/garage-init.sh "$dir/"
     echo "GK$(openssl rand -hex 12)" >"$dir/secrets/s3_access_key"
@@ -277,7 +277,7 @@ if [ -n "$authelia" ]; then
 fi
 
 if [ -n "$bisync" ]; then
-    # SELF-HOSTING.md's setup: the drive, rclone's owncloud vendor (it sends the
+    # OPERATING.md's setup: the drive, rclone's owncloud vendor (it sends the
     # files' modification times, which the server keeps), the app password.
     mkdir -p "$dir/rclone" "$dir/sync"
     rclone() {
