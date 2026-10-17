@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.1.0] - 2026-10-17
+
+### Features
+
+- Web 1.1.0, the Theca mark
+
+### Fixes
+
+- **ci**: OPERATING.md's copy check refuses a missing marker
+
 ## [1.0.1] - 2026-10-16
 
 ### Documentation

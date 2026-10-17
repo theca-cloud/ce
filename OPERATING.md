@@ -1,4 +1,4 @@
-# Running Theca
+# <img src="https://raw.githubusercontent.com/theca-cloud/ce/main/logo.svg" alt="" width="36" align="top"> Running Theca
 
 **Theca** is a self-hosted cloud storage: a web app, a WebDAV drive, every file's history, files deduplicated in chunks. What it is and why: the [README](https://github.com/theca-cloud/ce#readme). Try it first: **[the demo](https://demo.theca.rs)**, reset every hour.
 

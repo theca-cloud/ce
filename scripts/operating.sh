@@ -9,6 +9,10 @@ set -eu
 cd "$(dirname "$0")/.."
 
 core=$(sed -n 's/^ARG CORE_VERSION=//p' Dockerfile)
+for marker in start end; do
+    grep -q "<!-- core:CONFIGURATION.md $marker -->" OPERATING.md ||
+        { echo "OPERATING.md lacks its '<!-- core:CONFIGURATION.md $marker -->' marker" >&2; exit 1; }
+done
 ref=$(curl -fsSL "https://raw.githubusercontent.com/theca-cloud/core/$core/CONFIGURATION.md" |
     awk '/^## /{on = ($0 == "## Environment variables" || $0 == "## Instance settings")} on')
 [ -n "$ref" ] || { echo "core $core's CONFIGURATION.md has no such sections" >&2; exit 1; }

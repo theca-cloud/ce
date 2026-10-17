@@ -1,4 +1,4 @@
-# Theca
+# <img src="https://raw.githubusercontent.com/theca-cloud/ce/main/logo.svg" alt="" width="36" align="top"> Theca
 
 **Your files, on your server.** Theca is a self-hosted cloud storage: a web app, a drive your computer and phone mount over WebDAV, and every file's history, in one Docker image.
 
