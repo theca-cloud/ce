@@ -13,6 +13,7 @@ The Community Edition: the CE image, **built from `core`'s and `web`'s sources**
 
 ## What it ships
 
+- **Linting the pipelines**: `woodpecker-cli lint --plugins-privileged woodpeckerci/plugin-docker-buildx:5.0.0 .woodpecker/*.yaml` (the server trusts it; without the flag, lint rejects the image steps). A change to a pipeline's `when`, or to a file another pipeline's `when` names, can start nothing: check which pipelines a push will run (`rc.yaml` waits on `ci.yaml`).
 - **The CE image**, amd64 and arm64 (arm64: self-hosters on a Raspberry Pi).
 - **A compose** naming the major version (`thecacloud/ce:1`), with Postgres (18+ with the built-in `C.UTF-8` collation, or the server refuses to start) and the filesystem storage; **`examples/`** around it: S3 with Garage, Caddy, Traefik, OIDC with Authelia.
 - **The S3 buckets' CORS rule**: browsers upload and download chunks through presigned URLs on the bucket's origin, so the bucket must allow `PUT` and `GET` from `PUBLIC_URL`, the signed headers (`x-amz-checksum-sha256`, `If-None-Match`), and expose `ETag`. Set up by `examples/s3-garage/`'s init; documented in `OPERATING.md` (S3 storage) for any other S3.
