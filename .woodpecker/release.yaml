@@ -29,8 +29,9 @@ steps:
   # One build, both registries: Gitea (what theca.pband.ch pulls) and Docker
   # Hub (thecacloud/ce, public). The only privileged plugin the server trusts
   # (WOODPECKER_PLUGINS_PRIVILEGED): keep this exact version. arm64's server
-  # compiles under QEMU: about 28 minutes on the agent (measured), within the
-  # 60-minute default timeout.
+  # compiles under QEMU: about 30 minutes on the agent (measured), within the
+  # 60-minute default timeout, only when core's pin changed: every stage is
+  # cached between releases, in its own image (rc.yaml's holds amd64 only).
   - name: image
     image: woodpeckerci/plugin-docker-buildx:5.0.0
     depends_on: [tags]
@@ -39,6 +40,8 @@ steps:
         - git.pband.ch/${CI_REPO}
         - thecacloud/ce
       platforms: linux/amd64,linux/arm64
+      cache_images:
+        - git.pband.ch/${CI_REPO}-buildcache:release
       dockerfile: Dockerfile
       tags_file: .tags
       logins:
