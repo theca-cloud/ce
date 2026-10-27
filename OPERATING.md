@@ -187,7 +187,7 @@ Copied from core's [CONFIGURATION.md](https://github.com/theca-cloud/core/blob/m
 
 ## Instance settings
 
-Changed through the admin API (`PATCH /api/v1/admin/settings`), which validates them and applies them at once, without a restart. Stored as strings in the `setting` table and typed by the server. A missing key takes its default; an invalid value is refused by the API (and stops the server at startup if written to the database by hand); an unknown key is logged as a warning.
+Changed in the web app's **Administration → Settings**, or through the admin API (`PATCH /api/v1/admin/settings`), which validates them and applies them at once, without a restart. Stored as strings in the `setting` table and typed by the server. A missing key takes its default; an invalid value is refused by the API (and stops the server at startup if written to the database by hand); an unknown key is logged as a warning.
 
 | Key | Default | Description |
 |---|---|---|

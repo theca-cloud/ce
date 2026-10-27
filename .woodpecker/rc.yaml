@@ -1,5 +1,5 @@
-# Release candidates: on dev, once the checks passed, the image for amd64 and
-# arm64, tagged with the version the next release will have (git-cliff, as
+# Release candidates: on dev, once the checks passed, the image for amd64 only
+# (arm64, under QEMU, is the release's: no arm64 machine runs an rc), tagged with the version the next release will have (git-cliff, as
 # scripts/release.sh computes it) plus -rc: rc, 1-rc, 1.2-rc, 1.2.3-rc. On
 # Gitea only. The app inside still reports the last release's version: VERSION
 # is bumped by the release itself.
@@ -36,15 +36,18 @@ steps:
       - cat .tags
 
   # The only privileged plugin the server trusts (WOODPECKER_PLUGINS_PRIVILEGED):
-  # keep this exact version. arm64's server compiles under QEMU: about 28
-  # minutes on the agent (measured), within the 60-minute default timeout.
+  # keep this exact version. Every stage cached between runs, in its own image
+  # (release.yaml has another: a mode=max export keeps only this build's
+  # platforms): a build that keeps core's pin compiles nothing.
   - name: image
     image: woodpeckerci/plugin-docker-buildx:5.0.0
     depends_on: [tags]
     settings:
       registry: git.pband.ch
       repo: git.pband.ch/${CI_REPO}
-      platforms: linux/amd64,linux/arm64
+      platforms: linux/amd64
+      cache_images:
+        - git.pband.ch/${CI_REPO}-buildcache:rc
       dockerfile: Dockerfile
       tags_file: .tags
       username:

@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.2.0] - 2026-10-27
+
+### Features
+
+- Core 1.1.0 and web 1.2.0
+
+### Fixes
+
+- **ci**: A change to rc.yaml alone runs the checks, then the rc
+
+### Documentation
+
+- **claude**: Linting the pipelines, and checking what a push starts
+
+### Build and CI
+
+- Release candidates for amd64 only, the build cache kept between runs
+
 ## [1.1.0] - 2026-10-17
 
 ### Features

@@ -1,14 +1,15 @@
 # The checks, on every branch and pull request, when something built or tested
 # changed; manual runs always. The smoke test (scripts/ci.sh) on a real Docker
 # daemon: it builds the very Dockerfile that is published, for the agent's
-# platform only (amd64, native: minutes). Both platforms are built by rc.yaml
-# and release.yaml.
+# platform only (amd64, native: minutes). rc.yaml builds amd64 too, release.yaml
+# both platforms.
 when:
   - event: [push, pull_request]
-    # Nothing built or tested changed: docs, local-only scripts, the other
-    # pipelines, repo housekeeping.
+    # Nothing built or tested changed: docs, local-only scripts, the release
+    # pipeline, repo housekeeping. Not rc.yaml: it waits on these checks, so a
+    # change to it alone would start nothing.
     path:
-      exclude: ["**/*.md", "docs/**", "roadmap/**", "LICENSE", ".gitignore", "cliff.toml", ".githooks/**", "scripts/install-hooks.sh", "scripts/release.sh", ".woodpecker/rc.yaml", ".woodpecker/release.yaml"]
+      exclude: ["**/*.md", "docs/**", "roadmap/**", "LICENSE", ".gitignore", "cliff.toml", ".githooks/**", "scripts/install-hooks.sh", "scripts/release.sh", ".woodpecker/release.yaml"]
     # Not a version commit (scripts/release.sh, `1.2.3`): it only bumps the
     # version on code dev already tested, on prod and coming back into dev.
     evaluate: 'not (trim(CI_COMMIT_MESSAGE) matches "^[0-9]+[.][0-9]+[.][0-9]+$")'
