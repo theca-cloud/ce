@@ -3,8 +3,8 @@
 # both fetched from GitHub at the pins below. The official image is built by this
 # very file, so a plain `docker build .` rebuilds it, logged in nowhere.
 # The two pins: the web stage refuses a pair where web isn't built for that core.
-ARG CORE_VERSION=1.0.0
-ARG WEB_VERSION=1.1.0
+ARG CORE_VERSION=1.1.0
+ARG WEB_VERSION=1.2.0
 ARG SOURCES=https://github.com/theca-cloud
 
 # The sources, at their release tags (no `v` from 1.0.0 on; 0.x's tags had one).
