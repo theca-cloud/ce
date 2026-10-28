@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.0] - 2026-10-28
+
+### Features
+
+- Core 1.2.0 and web 1.3.0: files operating systems leave (.DS_Store, ._*, Thumbs.db, desktop.ini) are no longer stored
+
 ## [1.2.1] - 2026-10-28
 
 ### Documentation
