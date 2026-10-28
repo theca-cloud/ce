@@ -116,7 +116,7 @@ For invitations, registration and password resets. Without SMTP they wait, and r
 
 ## WebDAV and two-way sync
 
-The drive: **`https://cloud.example.com/dav/`**, any username, an **app password** (**Account → App passwords**: everything, one organization or one library, read-only if you like). macOS Finder (⌘K), Windows Explorer (map a network drive), Linux file managers (`davs://…`), phone file apps.
+The drive: **`https://cloud.example.com/dav/`**, any username, an **app password** (**Account → App passwords**: everything, one organization or one library, read-only if you like). macOS Finder (⌘K), Windows Explorer (map a network drive), Linux file managers (`davs://…`), phone file apps. What operating systems leave beside files (`.DS_Store`, Finder's `._*`, `Thumbs.db`, `desktop.ini`) is accepted and not stored, so Finder tags don't survive a copy.
 
 Two-way sync with [rclone](https://rclone.org/) `bisync` (`vendor = owncloud`: modification times kept):
 
