@@ -4,9 +4,10 @@
 # and WebDAV, each page shot by Playwright's CLI with the admin's session.
 #   scripts/screenshots.sh                     every page from that instance
 #   scripts/screenshots.sh URL EMAIL PASSWORD  the user's pages (browse, a file,
-#       search, trash, login) from a live instance instead, e.g. the demo just
-#       after its reset; the organization's and the admin's pages stay local
-#       (the admin pages need an admin; SEARCH and PICTURE fit the queries
+#       search, login) from a live instance instead, e.g. the demo just after
+#       its reset; the organization's, the admin's, a branched file's versions
+#       and the trash stay local (the admin pages need an admin, the others
+#       data the live instance may not have; SEARCH and PICTURE fit the queries
 #       to its content, e.g. SEARCH=jpg PICTURE=.jpg for the demo)
 # Needs what scripts/smoke.sh needs, and npx (Playwright: web's version, its
 # Chromium installed once with npx playwright@<version> install chromium).
@@ -78,7 +79,7 @@ cat >"$dir/notes.md" <<'EOF'
 - New office: the lease is signed, moving on 1 November.
 EOF
 put "Acme/Documents/Meeting notes/2026-10-06.md" "$dir/notes.md"
-# A file with history: three versions.
+# A file with history: three versions, then a branch from the second.
 for size in 31200 33870 35112; do put "Acme/Documents/Budget 2027.xlsx" "$(bytes $size)"; done
 put "Acme/Documents/Company handbook.pdf" "$(bytes 2481120)"
 put "Acme/Documents/Logo.svg" "$(bytes 14210)"
@@ -104,6 +105,11 @@ child() { # node name: the child's ID
 }
 offsite=$(child "$(api GET /libraries | jq -r --arg l "$photos" '.[] | select(.id == $l) | .root')" "Team offsite 2026")
 lake=$(child "$offsite" Lake.png)
+budget=$(child "$(api GET /libraries | jq -r --arg l "$docs" '.[] | select(.id == $l) | .root')" "Budget 2027.xlsx")
+# Version 2 made current again, then edited twice: versions 2.1.1 and 2.1.2.
+second=$(api GET "/files/$budget/versions" | jq -r '.[] | select(.number == "2") | .id')
+api POST "/files/$budget/versions/$second/restore" >/dev/null
+for size in 34020 34488; do put "Acme/Documents/Budget 2027.xlsx" "$(bytes $size)"; done
 
 state() { # the session for the browser (localhost counts as secure: the Secure cookie goes)
     session=$(awk '$6 == "theca_session" {print $7}' "$jar")
@@ -124,6 +130,8 @@ echo "Screenshots..."
 mkdir -p "$out"
 shot organization "/$org/settings" 900 --load-storage "$dir/state.json"
 shot admin "/admin/settings" 900 --load-storage "$dir/state.json"
+shot versions "/$org/$docs/$budget" 900 --load-storage "$dir/state.json"
+shot trash "/trash?library=$docs" 900 --load-storage "$dir/state.json"
 if [ $# -ge 3 ]; then
     url=${1%/} jar=$dir/remote
     curl -fsS -c "$jar" -H 'Content-Type: application/json' -o /dev/null \
@@ -138,5 +146,4 @@ fi
 shot browse "/$org/$docs" 900 --load-storage "$dir/state.json"
 shot file "/$org/$photos/$lake" 900 --load-storage "$dir/state.json"
 shot search "/search?q=$search" 900 --load-storage "$dir/state.json"
-shot trash "/trash?library=$docs" 900 --load-storage "$dir/state.json"
 shot login "/login" 900

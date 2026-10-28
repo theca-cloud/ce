@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.2.1] - 2026-10-28
+
+### Documentation
+
+- Screenshots of a branched file's versions and a filled trash, all from a local instance
+
 ## [1.2.0] - 2026-10-27
 
 ### Features
