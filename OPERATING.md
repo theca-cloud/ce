@@ -66,7 +66,7 @@ Data lives in two volumes, `theca_db` and `theca_data`. A folder of yours works 
 
 ## The reverse proxy
 
-The server listens on `127.0.0.1:8080`. The proxy must serve HTTPS for `PUBLIC_URL`, **not limit request bodies** (WebDAV uploads are whole files), **not cut long requests**, and pass `X-Forwarded-For`, from an address in `TRUSTED_PROXIES` (otherwise every client shares the proxy's rate limits).
+The server listens on `127.0.0.1:8080`. The proxy must serve HTTPS for `PUBLIC_URL`, **not limit request bodies** (WebDAV uploads are whole files), **not cut long requests** nor **buffer responses** (desktop clients follow changes over one long-lived response, a ping every 30 s keeping it open; the server also sends `X-Accel-Buffering: no`), and pass `X-Forwarded-For`, from an address in `TRUSTED_PROXIES` (otherwise every client shares the proxy's rate limits).
 
 Ready-made, with Let's Encrypt: [examples/caddy](https://github.com/theca-cloud/ce/tree/main/examples/caddy) and [examples/traefik](https://github.com/theca-cloud/ce/tree/main/examples/traefik). With nginx on the host:
 
@@ -160,6 +160,7 @@ docker compose up -d
 - **The setup link is lost**: `docker compose restart theca`, then the logs.
 - **Downloads fail in the browser**: not on HTTPS.
 - **WebDAV uploads fail behind a proxy**: its body limit or timeout (nginx's default limit is 1 MB).
+- **Desktop clients see changes late, or keep reconnecting**: the proxy buffers responses or cuts them before 30 s of silence (nginx: `proxy_buffering off`, `proxy_read_timeout` above 30 s).
 - **Browser uploads fail with S3**: the CORS rule, or the bucket's address unreachable from the browser.
 - **Everyone shares one rate limit**: the proxy isn't in `TRUSTED_PROXIES`.
 
