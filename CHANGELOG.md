@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.0] - 2026-11-03
+
+### Features
+
+- Core 1.3.0 and web 1.4.0: the event feed, devices logging in through the browser
+
+### Documentation
+
+- **operating**: The proxy does not buffer responses: desktop clients follow changes over one long-lived response
+
 ## [1.3.0] - 2026-10-28
 
 ### Features
