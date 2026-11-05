@@ -46,6 +46,10 @@ docker compose up -d && docker compose logs theca   # the setup link
 
 </details>
 
+## Questions and support
+
+Questions, need help, or running Theca and want to say so? Come to **[Discord](https://discord.gg/JBTfacSm4G)**.
+
 ## Status
 
 **Stable since 1.0**: upgrades keep your data, migrated forward at startup and tested against every earlier release's data; nothing you rely on breaks within a major version (`thecacloud/ce:1`). This is the **Community Edition**, free and complete; a hosted service and an Enterprise Edition will come later.

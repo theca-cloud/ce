@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.1] - 2026-11-05
+
+### Documentation
+
+- **readme**: A Discord link, for questions, support and saying you run Theca
+
 ## [1.4.0] - 2026-11-03
 
 ### Features
