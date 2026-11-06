@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.2] - 2026-11-06
+
+### Fixes
+
+- Core 1.3.2 and web 1.4.2, what the sync client needs to never lose files
+
 ## [1.4.1] - 2026-11-05
 
 ### Documentation
