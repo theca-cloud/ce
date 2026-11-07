@@ -17,7 +17,7 @@ The Community Edition: the CE image, **built from `core`'s and `web`'s sources**
 - **The CE image**, amd64 and arm64 (arm64: self-hosters on a Raspberry Pi).
 - **A compose** naming the major version (`thecacloud/ce:1`), with Postgres (18+ with the built-in `C.UTF-8` collation, or the server refuses to start) and the filesystem storage; **`examples/`** around it: S3 with Garage, Caddy, Traefik, OIDC with Authelia.
 - **The S3 buckets' CORS rule**: browsers upload and download chunks through presigned URLs on the bucket's origin, so the bucket must allow `PUT` and `GET` from `PUBLIC_URL`, the signed headers (`x-amz-checksum-sha256`, `If-None-Match`), and expose `ETag`. Set up by `examples/s3-garage/`'s init; documented in `OPERATING.md` (S3 storage) for any other S3.
-- **The `rclone bisync` documentation**: 1.0's two-way sync goes through WebDAV; the sync client is a `Next` feature (`../docs/docs/features.md`).
+- **The computer app and `rclone bisync`**: the computer app (the `computer` repo) is linked from `README.md` and `OPERATING.md`, its documentation on `theca.rs/computer`, never copied here; `rclone bisync` over WebDAV stays documented for those without it.
 
 ## CI and releases
 

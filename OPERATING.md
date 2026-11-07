@@ -118,7 +118,7 @@ For invitations, registration and password resets. Without SMTP they wait, and r
 
 The drive: **`https://cloud.example.com/dav/`**, any username, an **app password** (**Account → App passwords**: everything, one organization or one library, read-only if you like). macOS Finder (⌘K), Windows Explorer (map a network drive), Linux file managers (`davs://…`), phone file apps. What operating systems leave beside files (`.DS_Store`, Finder's `._*`, `Thumbs.db`, `desktop.ini`) is accepted and not stored, so Finder tags don't survive a copy.
 
-Two-way sync with [rclone](https://rclone.org/) `bisync` (`vendor = owncloud`: modification times kept):
+**The computer app** keeps folders identical to libraries, both ways, on macOS, Windows and Linux, headless on servers too: download it from its [releases](https://github.com/theca-cloud/computer/releases); installing and using it: [theca.rs/computer](https://theca.rs/computer). It needs this server at 1.4.4 or later, and follows changes over one long-lived response (the reverse proxy above). Without it, two-way sync with [rclone](https://rclone.org/) `bisync` (`vendor = owncloud`: modification times kept):
 
 ```sh
 rclone config create theca webdav url=https://cloud.example.com/dav/ vendor=owncloud \

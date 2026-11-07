@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.5] - 2026-11-07
+
+### Documentation
+
+- The computer app, linked from the README and OPERATING.md
+
 ## [1.4.4] - 2026-11-07
 
 ### Fixes
