@@ -7,6 +7,7 @@
 - **Storage that doesn't repeat itself.** Files are cut into chunks, and a chunk is stored once across the libraries that trust each other: a copy, a renamed file or a new version of a large file only stores what changed.
 - **Your files skip the server.** With S3 storage, the web app uploads and downloads chunks straight to the bucket through short-lived signed URLs; the server only decides who may do what.
 - **Nothing is overwritten.** Every version is kept, as a tree: restore an old one and keep working, and two people editing at once both keep their work.
+- **An app for your computers.** Theca for macOS, Windows and Linux keeps folders identical to your libraries, both ways, and runs headless on servers: download it from its [releases](https://github.com/theca-cloud/computer/releases), as [theca.rs/computer](https://theca.rs/computer) explains.
 
 ![The file browser](https://raw.githubusercontent.com/theca-cloud/ce/main/screenshots/browse.png)
 
@@ -31,7 +32,7 @@ docker compose up -d && docker compose logs theca   # the setup link
 - **Versions**: each upload adds one; any version is previewed, downloaded or made current again.
 - **A trash**, restorable until it's purged (30 days by default).
 - **Previews** of images, PDFs, videos, music and text, in the browser.
-- **A network drive** over WebDAV (Finder, Windows Explorer, Linux file managers, phones), and **two-way sync** with `rclone bisync`.
+- **A network drive** over WebDAV (Finder, Windows Explorer, Linux file managers, phones), and **two-way sync** with the [computer app](https://theca.rs/computer) or `rclone bisync`.
 - **Your disk, or S3** (Garage, MinIO, AWS, Backblaze...), chosen per library; optional compression.
 - **Logging in your way**: passwords with two-factor authentication (TOTP), or your identity provider (OIDC: Authelia, Authentik, Keycloak, Google, Microsoft...); app passwords for WebDAV and scripts.
 - **Organizations** for groups and companies: members, libraries, their own login provider, a quota. A company keeps its files when someone leaves.
