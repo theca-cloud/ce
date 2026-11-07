@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.4] - 2026-11-07
+
+### Fixes
+
+- Core 1.4.0 and web 1.4.4, the client fixes of sprint 12
+
 ## [1.4.3] - 2026-11-06
 
 ### Fixes
