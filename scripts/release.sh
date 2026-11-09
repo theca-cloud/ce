@@ -62,7 +62,7 @@ if [ -n "$dry" ]; then
     exit 0
 fi
 
-[ -x scripts/ci.sh ] && { scripts/ci.sh || die "scripts/ci.sh failed: nothing released"; }
+scripts/ci.sh || die "scripts/ci.sh failed: nothing released"
 
 if [ "$branch" = dev ]; then
     git checkout -q prod
