@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.5.0] - 2026-11-10
+
+### Features
+
+- Core 1.6.1 and web 1.5.0: ignore files (.thecaignore)
+
+### Fixes
+
+- **ci**: Run the checks on prod and version tags, before any release
+- **ci**: The smoke test runs rclone as its caller, so its cleanup can remove what rclone wrote
+
 ## [1.4.5] - 2026-11-07
 
 ### Documentation

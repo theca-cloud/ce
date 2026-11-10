@@ -281,9 +281,12 @@ if [ -n "$bisync" ]; then
     # files' modification times, which the server keeps), the app password.
     mkdir -p "$dir/rclone" "$dir/sync"
     rclone() {
-        # Its config, and its cache: bisync's listings between runs.
-        docker run --rm --network theca-smoke_default -v "$dir/rclone:/config/rclone" -v "$dir/sync:/data" \
-            -v "$dir/rclone:/root/.cache/rclone" \
+        # Its config, and its cache (bisync's listings between runs) beside
+        # it; as the caller, so the cleanup can remove what it writes (root's
+        # files stayed where Docker doesn't map owners, as on native Linux).
+        docker run --rm --network theca-smoke_default --user "$(id -u):$(id -g)" \
+            -v "$dir/rclone:/config/rclone" -v "$dir/sync:/data" \
+            -e HOME=/config/rclone \
             rclone/rclone:1.75 "$@"
     }
     printf '[theca]\ntype = webdav\nurl = http://theca:8080/dav/\nvendor = owncloud\nuser = smoke\npass = %s\n' \
